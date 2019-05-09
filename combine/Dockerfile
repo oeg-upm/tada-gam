@@ -3,4 +3,7 @@ WORKDIR /app
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 COPY *.py /app/
-CMD ["python", "score.py"]
+CMD ["python", "combine.py"]
+
+
+
