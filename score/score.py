@@ -1,11 +1,13 @@
 from models import Bite, database, create_tables
 from flask import Flask, g, request, render_template
+from graph import type_graph
+
 app = Flask(__name__)
 
 
 @app.route('/')
 def hello_world():
-    return 'Hello World!'
+    return 'Hello World! graph'
 
 
 @app.route('/register', methods=['GET'])
