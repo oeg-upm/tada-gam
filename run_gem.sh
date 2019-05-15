@@ -1,2 +1,3 @@
 #docker-compose build
-docker-compose up -d --build  --scale score=3
+docker-compose down
+docker-compose up -d --build  --scale score=3 --scale combine=4
