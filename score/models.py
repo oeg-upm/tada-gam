@@ -17,7 +17,7 @@ class Bite(BaseModel):
     table = CharField()  # table name or id
     column = IntegerField()  # column order (position)
     slice = IntegerField()  # slice order (position)
-    target = CharField()  # the url:ip of the server that the processed data need to be sent to
+    addr = CharField()  # the url:ip of the server that the processed data need to be sent to
 
 
 def create_tables():
