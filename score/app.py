@@ -3,6 +3,8 @@ from flask import Flask, g, request, render_template
 from werkzeug.utils import secure_filename
 from graph import type_graph
 
+import requests
+
 
 app = Flask(__name__)
 
@@ -22,6 +24,15 @@ def score():
     print(uploaded_file.read())
     b = Bite(table=request.form['table'], slice=request.form['slice'], column=request.form['column'], addr=request.form['addr'])
     b.save()
+    get_params = {
+        'table': b.table,
+        'column': b.column,
+        'slice': b.slice,
+        'addr': b.addr,
+        'total': request.form['total']
+    }
+    print("address: "+str(request.form['addr']+"/add"))
+    requests.get(request.form['addr']+"/add", params=get_params)
     return 'data received and processed'
 
 

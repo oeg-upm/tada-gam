@@ -14,12 +14,11 @@ def add_bite():
     table_name = request.args.get('table')
     column = int(request.args.get('column'))
     slice = int(request.args.get('slice'))
-    target = request.args.get('target')
     tot = request.args.get('total')  # total number of slices
 
     apple = Apple.select().where(Apple.table==table_name and Apple.column==column)
     if len(apple) == 0:
-        apple = Apple(table=table_name, column=column, target=target, total=tot)
+        apple = Apple(table=table_name, column=column, total=tot)
         apple.save()
     else:
         apple = apple[0]
@@ -40,7 +39,6 @@ def received():
         bites += "<td>%s</td>\n" % bite.apple.table
         bites += "<td>%d</td>\n" % bite.apple.column
         bites += "<td>%d</td>\n" % bite.slice
-        bites += "<td>%s</td>\n" % bite.apple.target
         bites += "</tr>"
     bites += "</table>"
     return bites
@@ -60,7 +58,6 @@ def reason():
         html += "<tr>"
         html += "<td>%s</td>" % apple.table
         html += "<td>%d</td>" % apple.column
-        html += "<td>%s</td>" % apple.target
         if sorted(slices) == range(apple.total):
             html += "<td> Completed </td>"
         else:

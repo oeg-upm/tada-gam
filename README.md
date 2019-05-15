@@ -1,5 +1,5 @@
 # tada-gam
-A scalable version of tada entity.
+A scalable version of tada entity using the MapReduce framework
 
 # Usage
 To use this tool, we need to talk with the `captain.py`. It manages the 

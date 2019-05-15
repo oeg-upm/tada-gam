@@ -5,6 +5,9 @@ services:
     build: ./score
     ports:
       - "5100-5199:5000"
+    links:
+      - "combine"
+
   combine:
     image: tada:combine
     build: ./combine

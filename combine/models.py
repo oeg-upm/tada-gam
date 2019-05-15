@@ -14,7 +14,6 @@ class BaseModel(Model):
 class Apple(BaseModel):
     table = CharField()  # table name or id
     column = IntegerField()  # column order (position)
-    target = CharField()  # the url:ip of the server that the processed data need to be sent to
     total = IntegerField()  # Total number of bites/slices
 
 

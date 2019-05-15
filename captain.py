@@ -55,14 +55,16 @@ def label_column(file_dir, col, port, slice_size, score_ports):
     dfcol = df.iloc[:, 0]
     # assume to have 3 slices
     fname = file_dir.split(os.pathsep)[-1]
-    for x in range(3):
+    # total_num_slices = dfcol.shape[0]/slice_size + 1
+    total_num_slices = 3
+    for x in range(total_num_slices):
         print("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col, x,
                                                                                          score_ports[x], port))
         slice_from = x*slice_size
         slice_to = slice_from + slice_size
         # files = {'file_slice': open(file_dir, 'rb')}
         files = {'file_slice': (fname, "\t".join(dfcol[slice_from:slice_to].values.tolist()))}
-        values = {'table': fname, 'column': col, 'slice': x,
+        values = {'table': fname, 'column': col, 'slice': x, 'total': total_num_slices,
                   'addr': "http://127.0.0.1:"+str(port)}
         score_url = "http://127.0.0.1:"+str(score_ports[x])+"/score"
         print("files: "+str(files))
