@@ -1,3 +1,4 @@
+import os
 from flask import Flask, g, request
 from models import database, create_tables
 from models import Bite, Apple
@@ -153,6 +154,8 @@ def after_request(response):
 
 if __name__ == '__main__':
     create_tables()
-    app.run(debug=True, host='0.0.0.0')
-
+    if 'port' in os.environ:
+        app.run(debug=True, host='0.0.0.0', port=int(os.environ['port']))
+    else:
+        app.run(debug=True, host='0.0.0.0')
 

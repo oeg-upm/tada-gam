@@ -9,6 +9,23 @@ import requests
 app = Flask(__name__)
 
 
+@app.route('/test')
+def test_combine():
+    import socket
+    if request.args.get('dest') is None:
+        return "combine ip: "+str(socket.gethostbyname('combine'))+ " - " + str(socket.gethostbyname('score'))
+
+    # else:
+    #     return "dest: <%s>" % request.args.get('dest')
+    import requests
+    try:
+        r = requests.get(request.args.get('dest'))
+        return r.content
+    except Exception as e:
+        return str(e)
+    return 'Hello World! graph'
+
+
 @app.route('/')
 def hello_world():
     return 'Hello World! graph'
