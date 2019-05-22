@@ -3,57 +3,7 @@ services:
   score:
     image: tada:score
     build: ./score
-    ports:
-#      - "5000"
-      - "5100-5199:5000"
-#    - "172.1.2.3:5100-5199:5000"
-
-  #    network_mode: "host"
-#    networks:
-#      abcnet:
-#        ipv4_address: 172.16.238.9
-#    networks:
-#      - default
-#    network_mode: "host"
-
-
-
   combine:
     image: tada:combine
     build: ./combine
-#    ports:
-#      - "5200-5299:5000"
-#    ports:
-#      - ""
-#    network_mode: "host"
 
-#    networks:
-#      - abcnet
-#    networks:
-#      abcnet:
-#        ipv4_address: 172.16.238.10
-
-#    network_mode: "host"
-
-#networks:
-#  parent:
-#    driver: host
-#  scorenet:
-#    driver: bridge
-
-#networks:
-#  abcnet:
-#    driver: bridge
-#  parent:
-#    driver: host
-#
-#networks:
-#  abcnet:
-#    driver: bridge
-#    ipam:
-#      driver: default
-#      config:
-#      - subnet: 172.16.238.0/24
-#        gateway: 172.16.238.1
-#      - subnet: 2001:3984:3989::/64
-#        gateway: 2001:3984:3989::1

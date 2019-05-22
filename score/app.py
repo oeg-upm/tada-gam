@@ -1,3 +1,4 @@
+import os
 from models import Bite, database, create_tables
 from flask import Flask, g, request, render_template
 from werkzeug.utils import secure_filename
@@ -33,6 +34,7 @@ def hello_world():
 
 @app.route('/score', methods=['POST'])
 def score():
+    print("in score")
     print(request.files)
     uploaded_file = request.files['file_slice']
     print("post data:" )
@@ -93,7 +95,10 @@ def after_request(response):
 
 if __name__ == '__main__':
     create_tables()
-    app.run(debug=True, host='0.0.0.0')
+    if 'port' in os.environ:
+        app.run(debug=True, host='0.0.0.0', port=int(os.environ['port']))
+    else:
+        app.run(debug=True, host='0.0.0.0')
 
 
 

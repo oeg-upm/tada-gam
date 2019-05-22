@@ -6,9 +6,21 @@ import requests
 import pandas as pd
 import io
 
-COMBINE_HOST = "http://combine"
-# COMBINE_HOST = "http://127.0.0.1"
-# COMBINE_HOST = "http://172.16.238.10"
+# This is the default network created by docker
+NETWORK = "tada-gam_default"
+
+
+def get_network_ip():
+    """
+    Get the ip of the network
+    :return:
+    """
+    comm = """ docker network inspect tada-gam_default | grep "Gateway" """
+    print("comm: "+comm)
+    a = subprocess.Popen(comm, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
+    ip = a.split(":")[1].replace('"', '').strip()
+    print("The ip: "+ip)
+    return ip
 
 
 def get_ports(service):
@@ -53,13 +65,14 @@ def label_column(file_dir, col, port, slice_size, score_ports):
     :return:
     """
     print("combine> file: %s, col: %d, port: %s" % (file_dir, col, port))
+    COMBINE_HOST = "http://"+get_network_ip()
     num_ports = len(score_ports)
     i = random.randint(0, num_ports-1)
     df = pd.read_csv(file_dir)
     dfcol = df.iloc[:, 0]
-    # assume to have 3 slices
     fname = file_dir.split(os.pathsep)[-1]
     # total_num_slices = dfcol.shape[0]/slice_size + 1
+    # assume to have 3 slices
     total_num_slices = 3
     for x in range(total_num_slices):
         print("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col, x,
@@ -79,10 +92,9 @@ def label_column(file_dir, col, port, slice_size, score_ports):
         i = i % num_ports
 
 
-def up_services(services, instances):
+def up_services(services):
     """
     :param services: list of strings
-    :param instances: list of instances
     :return:
     """
 
@@ -96,23 +108,63 @@ def up_services(services, instances):
 
     # Running services
     port = 5100
-    for idx in range(len(services)):
-        services[idx]
-        instances[idx]
-        for i in range(int(instances[idx])):
-            if services[idx] == "combine":
-                in_port = port
-            else:
-                in_port = 5000
-            if run_service(services[idx], port, in_port):
+    for service_instance in services:
+        if '=' in service_instance:
+            service, instances = service_instance.split('=')
+        else:
+            instances = 1
+            service = service_instance
+
+        for i in range(int(instances)):
+            in_port = port
+            # if service == "combine":
+            #     in_port = port
+            # else:
+            #     in_port = 5000
+            if run_service(service, port, in_port):
                 port += 1
             else:
-                print("Error in running service: %s" % (services[idx]))
+                print("Error in running service: %s" % (service))
                 return False
 
     comm = "docker-compose ps"
     subprocess.call(comm, shell=True)
     return True
+
+# def up_services(services, instances):
+#     """
+#     :param services: list of strings
+#     :param instances: list of instances
+#     :return:
+#     """
+#
+#     # Shutdown running instances
+#     comm = "docker-compose down"
+#     subprocess.call(comm, shell=True)
+#
+#     # Rebuild images
+#     comm = "docker-compose build"
+#     subprocess.call(comm, shell=True)
+#
+#     # Running services
+#     port = 5100
+#     for idx in range(len(services)):
+#         services[idx]
+#         instances[idx]
+#         for i in range(int(instances[idx])):
+#             if services[idx] == "combine":
+#                 in_port = port
+#             else:
+#                 in_port = 5000
+#             if run_service(services[idx], port, in_port):
+#                 port += 1
+#             else:
+#                 print("Error in running service: %s" % (services[idx]))
+#                 return False
+#
+#     comm = "docker-compose ps"
+#     subprocess.call(comm, shell=True)
+#     return True
 
 
 def run_service(service, out_port, in_port):
@@ -157,7 +209,7 @@ def parse_args():
     parser.add_argument('--files', nargs='+', help="The set of file to be labeled")
     # parser.add_argument('--cols', nargs='+', help="The indices of the columns (starting from 0)")
     parser.add_argument('--slicesize', help="The max number of elements in a slice", type=int, default=10)
-    parser.add_argument('--instances', nargs='+', help="The numbers of instances (as a list)")
+    # parser.add_argument('--instances', nargs='+', help="The numbers of instances (as a list)")
     parser.add_argument('--services', nargs='+', help="The names of the services")
     # parser.add_argument('--dir', help="The directory of the input files to be labeled")
     args = parser.parse_args()
@@ -180,21 +232,30 @@ def parse_args():
         else:
             parser.print_help()
     elif action == "up":
-        if args.instances and args.services:
-            if len(args.instances) != len(args.services):
-                parser.print_help()
-                msg = "\nThe number of services and the number of instances should match\n"
-                print(msg)
+        if args.services:
+            if up_services(args.services):
+                pass
             else:
-                if up_services(args.services, args.instances):
-                    pass
-                else:
-                    print("Error running one of the services")
-                    #parser.print_help()
+                print("Error running one of the services")
         else:
             parser.print_help()
-            msg = "\nServices and the number of instances should be passed\n"
+            msg = "\nServices of instances should be passed in the form of SERVICE=#instance1 SERVICE=#instances2\n"
             print(msg)
+        # if args.instances and args.services:
+        #     if len(args.instances) != len(args.services):
+        #         parser.print_help()
+        #         msg = "\nThe number of services and the number of instances should match\n"
+        #         print(msg)
+        #     else:
+        #         if up_services(args.services, args.instances):
+        #             pass
+        #         else:
+        #             print("Error running one of the services")
+        #             #parser.print_help()
+        # else:
+        #     parser.print_help()
+        #     msg = "\nServices and the number of instances should be passed\n"
+        #     print(msg)
     else:
         parser.print_help()
 
