@@ -16,10 +16,10 @@ def get_network_ip():
     :return:
     """
     comm = """ docker network inspect tada-gam_default | grep "Gateway" """
-    print("comm: "+comm)
+    # print("comm: "+comm)
     a = subprocess.Popen(comm, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
     ip = a.split(":")[1].replace('"', '').strip()
-    print("The ip: "+ip)
+    # print("The ip: "+ip)
     return ip
 
 
@@ -64,30 +64,35 @@ def label_column(file_dir, col, port, slice_size, score_ports):
     :param score_ports: a list of score ports
     :return:
     """
-    print("combine> file: %s, col: %d, port: %s" % (file_dir, col, port))
+    print("\n\ncombine> file: %s, col: %d, port: %s" % (file_dir, col, port))
     COMBINE_HOST = "http://"+get_network_ip()
     num_ports = len(score_ports)
     i = random.randint(0, num_ports-1)
     df = pd.read_csv(file_dir)
     dfcol = df.iloc[:, 0]
-    fname = file_dir.split(os.pathsep)[-1]
-    # total_num_slices = dfcol.shape[0]/slice_size + 1
-    # assume to have 3 slices
-    total_num_slices = 3
-    for x in range(total_num_slices):
-        print("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col, x,
-                                                                                         score_ports[x], port))
-        slice_from = x*slice_size
-        slice_to = slice_from + slice_size
+    fname = file_dir.split(os.sep)[-1]
+    total_num_slices = dfcol.shape[0]/slice_size
+    if dfcol.shape[0]%slice_size != 0:
+        total_num_slices += 1
+    score_port_idx = random.randint(0, num_ports-1)
+    for slice_idx in range(total_num_slices):
+        score_port = score_ports[(score_port_idx+slice_idx)%num_ports]
+        print("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col, slice_idx,
+                                                                                         score_port, port))
+        slice_from = slice_idx*slice_size
+        #slice_to = slice_from + slice_size
+        slice_to = min(slice_from + slice_size, dfcol.shape[0]-1)  # to cover the cases where the last slice is not full
         # files = {'file_slice': open(file_dir, 'rb')}
         files = {'file_slice': (fname, "\t".join(dfcol[slice_from:slice_to].values.tolist()))}
-        values = {'table': fname, 'column': col, 'slice': x, 'total': total_num_slices,
+        values = {'table': fname, 'column': col, 'slice': slice_idx, 'total': total_num_slices,
                   'addr': COMBINE_HOST+":"+str(port)}
-        score_url = "http://127.0.0.1:"+str(score_ports[x])+"/score"
-        print("files: "+str(files))
-        print("post data: "+str(values))
-        print("score url: "+str(score_url))
+        score_url = "http://127.0.0.1:"+str(score_port)+"/score"
+        # print("files: "+str(files))
+        # print("post data: "+str(values))
+        # print("score url: "+str(score_url))
         r = requests.post(score_url, files=files, data=values)
+        if r.status_code != 200:
+            print("error: "+str(r.content))
         i = i + 1
         i = i % num_ports
 

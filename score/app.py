@@ -1,4 +1,7 @@
 import os
+import logging
+# logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 from models import Bite, database, create_tables
 from flask import Flask, g, request, render_template
 from werkzeug.utils import secure_filename
@@ -34,14 +37,16 @@ def hello_world():
 
 @app.route('/score', methods=['POST'])
 def score():
-    print("in score")
-    print(request.files)
+    logger.debug("in score")
+    # print(request.files)
     uploaded_file = request.files['file_slice']
-    print("post data:" )
-    print request.form
-    print("file content: ")
-    print(uploaded_file.read())
-    b = Bite(table=request.form['table'], slice=request.form['slice'], column=request.form['column'], addr=request.form['addr'])
+    # print("post data:" )
+    # print request.form
+    # print("file content: ")
+    # print(uploaded_file.read())
+    table_name = request.form['table']
+    b = Bite(table=table_name, slice=request.form['slice'], column=request.form['column'],
+             addr=request.form['addr'])
     b.save()
     get_params = {
         'table': b.table,
@@ -50,8 +55,11 @@ def score():
         'addr': b.addr,
         'total': request.form['total']
     }
-    print("address: "+str(request.form['addr']+"/add"))
-    requests.get(request.form['addr']+"/add", params=get_params)
+    # print("address: "+str(request.form['addr']+"/add"))
+    logger.debug("sending to combine: "+str(get_params))
+    r = requests.get(request.form['addr']+"/add", params=get_params)
+    if r.status_code != 200:
+        logger.debug("error: "+r.content)
     return 'data received and processed'
 
 
@@ -69,6 +77,13 @@ def fetch():
     bites = """
     Bites
     <table>
+            <tr>
+            <td>Table</td>
+            <td>Column</td>
+            <td>Slice</td>
+            <td>Address</td>
+
+        </tr>
     """
     for bite in Bite.select():
         bites += "<tr>"

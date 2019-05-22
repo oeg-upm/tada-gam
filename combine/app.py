@@ -12,18 +12,19 @@ def hello_world():
 
 @app.route('/add', methods=["GET"])
 def add_bite():
-    table_name = request.args.get('table')
+    table_name = request.args.get('table').strip()
     column = int(request.args.get('column'))
     slice = int(request.args.get('slice'))
-    tot = request.args.get('total')  # total number of slices
+    tot = int(request.args.get('total'))  # total number of slices
 
-    apple = Apple.select().where(Apple.table==table_name and Apple.column==column)
-    if len(apple) == 0:
+    apples = Apple.select().where(Apple.table==table_name and Apple.column==column)
+    if len(apples) == 0:
+        print("New apple: %s, %d, %d" % (table_name, column, tot))
         apple = Apple(table=table_name, column=column, total=tot)
         apple.save()
     else:
-        apple = apple[0]
-
+        apple = apples[0]
+        print("Existing apple: %s, %d, %d" % (apple.table, apple.column, apple.total))
     b = Bite(apple=apple, slice=slice)
     b.save()
     return 'Bite: %d is added' % b.slice
@@ -34,7 +35,13 @@ def received():
     bites = """
     Bites
     <table>
+        <tr>
+            <td>Table</td>
+            <td>Column</td>
+            <td>Slice</td>
+        </tr>
     """
+
     for bite in Bite.select():
         bites += "<tr>"
         bites += "<td>%s</td>\n" % bite.apple.table
