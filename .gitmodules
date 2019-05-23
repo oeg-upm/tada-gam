@@ -1,6 +1,0 @@
-[submodule "score/graph"]
-	path = score/graph
-	url = git@github.com:oeg-upm/tada-type-graph.git
-[submodule "combine/graph"]
-	path = combine/graph
-	url = git@github.com:oeg-upm/tada-type-graph.git
