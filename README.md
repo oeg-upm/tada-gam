@@ -1,4 +1,8 @@
 # tada-gam
+
+[![Build Status](https://semaphoreci.com/api/v1/ahmad88me/tada-gam/branches/master/badge.svg)](https://semaphoreci.com/ahmad88me/tada-gam)
+[![codecov](https://codecov.io/gh/oeg-upm/tada-gam/branch/master/graph/badge.svg)](https://codecov.io/gh/oeg-upm/tada-gam)
+
 A scalable version of tada entity using the MapReduce framework
 
 # Usage

@@ -1,6 +1,10 @@
 [submodule "score"]
 	path = score
 	url = https://github.com/oeg-upm/tada-map-score.git
+	ignore = dirty
+
 [submodule "combine"]
 	path = combine
 	url = https://github.com/oeg-upm/tada-reduce-combine.git
+	ignore = dirty
+

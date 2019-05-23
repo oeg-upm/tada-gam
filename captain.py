@@ -208,7 +208,7 @@ def label_files(files, slice_size):
             i = i % num_ports
 
 
-def parse_args():
+def parse_args(args=None):
     parser = argparse.ArgumentParser(description='Captain to look after the processes')
     parser.add_argument('action', help='What action you like to perform', choices=['label', 'ports', 'up'])
     parser.add_argument('--files', nargs='+', help="The set of file to be labeled")
@@ -217,7 +217,10 @@ def parse_args():
     # parser.add_argument('--instances', nargs='+', help="The numbers of instances (as a list)")
     parser.add_argument('--services', nargs='+', help="The names of the services")
     # parser.add_argument('--dir', help="The directory of the input files to be labeled")
-    args = parser.parse_args()
+    if args is None:
+        args = parser.parse_args()
+    else:
+        args = parser.parse_args(args)
     action = args.action
     if action == "ports":
         ports_combine = get_ports(service="combine")
