@@ -172,6 +172,24 @@ def up_services(services):
 #     return True
 
 
+def combine_status():
+    ports_combine = get_ports(service="combine")
+    apples = []
+    for p in ports_combine:
+        url = "http://127.0.0.1:"+p+"/status"
+        response = requests.get(url)
+        apples += response.json()["apples"]
+
+    print("%30s     %20s" % ("Apple", "status"))
+    print("%30s     %20s" % ("---------", "---------"))
+
+    for a in apples:
+        print("%30s     %20s" % (a["apple"], a["status"]))
+
+    print("------------------------------------------")
+    print("total: %d\n" % len(apples))
+
+
 def run_service(service, out_port, in_port):
     """
     :param service: The name of the service
@@ -210,7 +228,7 @@ def label_files(files, slice_size):
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description='Captain to look after the processes')
-    parser.add_argument('action', help='What action you like to perform', choices=['label', 'ports', 'up'])
+    parser.add_argument('action', help='What action you like to perform', choices=['label', 'ports', 'up', 'status'])
     parser.add_argument('--files', nargs='+', help="The set of file to be labeled")
     # parser.add_argument('--cols', nargs='+', help="The indices of the columns (starting from 0)")
     parser.add_argument('--slicesize', help="The max number of elements in a slice", type=int, default=10)
@@ -249,6 +267,8 @@ def parse_args(args=None):
             parser.print_help()
             msg = "\nServices of instances should be passed in the form of SERVICE=#instance1 SERVICE=#instances2\n"
             print(msg)
+    elif action == "status":
+        combine_status()
         # if args.instances and args.services:
         #     if len(args.instances) != len(args.services):
         #         parser.print_help()
