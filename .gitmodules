@@ -1,0 +1,6 @@
+[submodule "score"]
+	path = score
+	url = https://github.com/oeg-upm/tada-map-score.git
+[submodule "combine"]
+	path = combine
+	url = https://github.com/oeg-upm/tada-reduce-combine.git
