@@ -54,4 +54,10 @@ optional arguments:
 * `docker-compose`
 * `python 2.7`
 
+# To update submodules
+```
+git submodule foreach git pull origin master
+```
+[source](https://stackoverflow.com/questions/5828324/update-git-submodule-to-latest-commit-on-origin)
+
 
