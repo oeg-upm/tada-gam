@@ -3,8 +3,8 @@ import captain
 import subprocess
 
 
-def start_services():
-    pass
+# def start_services():
+#     pass
 
 
 class TestGam(unittest.TestCase):

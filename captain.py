@@ -177,6 +177,7 @@ def combine_status():
     apples = []
     for p in ports_combine:
         url = "http://127.0.0.1:"+p+"/status"
+        print("url: "+url)
         response = requests.get(url)
         apples += response.json()["apples"]
 
@@ -221,6 +222,7 @@ def label_files(files, slice_size):
     i = random.randint(0, num_ports-1)
     for f in files:
         for c in detect_entity_cols(f):
+            print("label_column in file: "+f)
             label_column(file_dir=f, col=c, slice_size=slice_size, port=ports_combine[i], score_ports=ports_score)
             i = i+1
             i = i % num_ports
