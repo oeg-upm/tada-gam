@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<table>
+    <tr>
+        <td>Combine server</td>
+        <td>Apple</td>
+    </tr>
+    {% for pair in pairs %}
+    <tr>
+        <td>{{pair.url}}</td>
+        <td>{{pair.apple}}</td>
+    </tr>
+    {%endfor%}
+</table>
+{% endblock %}
