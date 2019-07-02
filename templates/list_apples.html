@@ -3,11 +3,13 @@
 <table>
     <tr>
         <td>Combine server</td>
+        <td>To label</td>
         <td>Apple</td>
     </tr>
     {% for pair in pairs %}
     <tr>
         <td>{{pair.url}}</td>
+        <td><a href="/get_label?m={{pair.apple.m}}&port={{pair.port}}&id={{pair.apple.id}}">click</a></td>
         <td>{{pair.apple}}</td>
     </tr>
     {%endfor%}
