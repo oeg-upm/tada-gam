@@ -49,7 +49,6 @@ def get_label():
     if graph_dir:
         print("graph_dir is found: "+str(graph_dir))
         alpha = 0.01
-        fsid = 3
         alpha_passed = request.args.get("alpha")
         if alpha_passed is not None:
             alpha = float(alpha_passed)
@@ -57,7 +56,7 @@ def get_label():
         fsid = 3
         fsid_passed = request.args.get("fsid")
         if fsid_passed is not None:
-            fsid = float(fsid_passed)
+            fsid = int(fsid_passed)
         print("graph_dir before get labels: "+graph_dir)
         g, labels = get_labels_from_graph(graph_dir=graph_dir, m=m, alpha=alpha, fsid=fsid)
 
@@ -67,7 +66,8 @@ def get_label():
         #                'edges': annotator.get_edges(graph), 'results': results, 'selected': entity_ann.id})
 
         return render_template('labels.html', labels=labels, network='network', highlights=labels[:3],
-                               nodes=get_nodes(g), fsid=fsid, edges=g.get_edges(), results=labels, selected=0)
+                               nodes=get_nodes(g), fsid=fsid, edges=g.get_edges(), results=labels,
+                               port=port, apple_id=apple_id, m=m, alpha=alpha)
     abort(500)
 
 
