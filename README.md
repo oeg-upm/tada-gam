@@ -61,3 +61,7 @@ git submodule foreach git pull origin master
 [source](https://stackoverflow.com/questions/5828324/update-git-submodule-to-latest-commit-on-origin)
 
 
+# To run the experiments
+## T2Dv2
+1. Download the data from the official [website](http://webdatacommons.org/webtables/goldstandard.html)
+2. Locate the downloaded data into `experiments/t2dv2/data`
