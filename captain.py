@@ -107,9 +107,9 @@ def up_services(services):
     comm = "docker-compose down"
     subprocess.call(comm, shell=True)
 
-    # Rebuild images
-    comm = "docker-compose build"
-    subprocess.call(comm, shell=True)
+    # # Rebuild images
+    # comm = "docker-compose build"
+    # subprocess.call(comm, shell=True)
 
     # Running services
     port = 5100

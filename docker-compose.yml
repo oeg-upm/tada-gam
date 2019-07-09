@@ -6,4 +6,6 @@ services:
   combine:
     image: tada:combine
     build: ./combine
-
+  ssspotter:
+    image: tada:ssspot
+    build: ./spot/ssspotter

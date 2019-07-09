@@ -8,3 +8,6 @@
 	url = https://github.com/oeg-upm/tada-reduce-combine.git
 	ignore = dirty
 
+[submodule "spot/ssspotter"]
+	path = spot/ssspotter
+	url = https://github.com/oeg-upm/ssspotter.git
