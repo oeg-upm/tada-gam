@@ -16,10 +16,8 @@ def get_network_ip():
     :return:
     """
     comm = """ docker network inspect tada-gam_default | grep "Gateway" """
-    # print("comm: "+comm)
     a = subprocess.Popen(comm, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
     ip = a.split(":")[1].replace('"', '').strip()
-    # print("The ip: "+ip)
     return ip
 
 
@@ -80,16 +78,11 @@ def label_column(file_dir, col, port, slice_size, score_ports):
         print("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col, slice_idx,
                                                                                          score_port, port))
         slice_from = slice_idx*slice_size
-        #slice_to = slice_from + slice_size
         slice_to = min(slice_from + slice_size, dfcol.shape[0]-1)  # to cover the cases where the last slice is not full
-        # files = {'file_slice': open(file_dir, 'rb')}
         files = {'file_slice': (fname, "\t".join(dfcol[slice_from:slice_to].values.tolist()))}
         values = {'table': fname, 'column': col, 'slice': slice_idx, 'total': total_num_slices,
                   'addr': COMBINE_HOST+":"+str(port)}
         score_url = "http://127.0.0.1:"+str(score_port)+"/score"
-        # print("files: "+str(files))
-        # print("post data: "+str(values))
-        # print("score url: "+str(score_url))
         r = requests.post(score_url, files=files, data=values)
         if r.status_code != 200:
             print("error: "+str(r.content))
@@ -122,10 +115,6 @@ def up_services(services):
 
         for i in range(int(instances)):
             in_port = port
-            # if service == "combine":
-            #     in_port = port
-            # else:
-            #     in_port = 5000
             if run_service(service, port, in_port):
                 port += 1
             else:
@@ -135,41 +124,6 @@ def up_services(services):
     comm = "docker-compose ps"
     subprocess.call(comm, shell=True)
     return True
-
-# def up_services(services, instances):
-#     """
-#     :param services: list of strings
-#     :param instances: list of instances
-#     :return:
-#     """
-#
-#     # Shutdown running instances
-#     comm = "docker-compose down"
-#     subprocess.call(comm, shell=True)
-#
-#     # Rebuild images
-#     comm = "docker-compose build"
-#     subprocess.call(comm, shell=True)
-#
-#     # Running services
-#     port = 5100
-#     for idx in range(len(services)):
-#         services[idx]
-#         instances[idx]
-#         for i in range(int(instances[idx])):
-#             if services[idx] == "combine":
-#                 in_port = port
-#             else:
-#                 in_port = 5000
-#             if run_service(services[idx], port, in_port):
-#                 port += 1
-#             else:
-#                 print("Error in running service: %s" % (services[idx]))
-#                 return False
-#
-#     comm = "docker-compose ps"
-#     subprocess.call(comm, shell=True)
-#     return True
 
 
 def combine_status():
@@ -209,13 +163,6 @@ def label_files(files, slice_size):
     :param files: the directory of the files
     :return:
     """
-    # print("files: " + str(files))
-    # ports_combine = get_ports(service="combine")
-    # ports_score = get_ports(service="score")
-    # print("combine: " + str(ports_combine))
-    # print("score: " + str(ports_score))
-    # elected_combine = random.choice(ports_combine)
-    # print("random picked score: " + random.choice(ports_score))
     ports_combine = get_ports(service="combine")
     ports_score = get_ports(service="score")
     num_ports = len(ports_combine)
@@ -247,16 +194,9 @@ def parse_args(args=None):
         ports_score = get_ports(service="score")
         print("combine: "+str(ports_combine))
         print("score: "+str(ports_score))
-        # print("random picked score: "+random.choice(ports_score))
     elif action == "label":
         if args.files:
             label_files(files=args.files, slice_size=args.slicesize)
-            # if args.cols and len(args.files) != len(args.cols):
-            #         parser.print_help()
-            #         print("\n\nERROR: Number of indices need to match the number of files\n")
-            #         return
-            # else:
-            #     label_files(files=args.files, cols=args.cols, slice_size=args.slicesize)
         else:
             parser.print_help()
     elif action == "up":
@@ -271,21 +211,6 @@ def parse_args(args=None):
             print(msg)
     elif action == "status":
         combine_status()
-        # if args.instances and args.services:
-        #     if len(args.instances) != len(args.services):
-        #         parser.print_help()
-        #         msg = "\nThe number of services and the number of instances should match\n"
-        #         print(msg)
-        #     else:
-        #         if up_services(args.services, args.instances):
-        #             pass
-        #         else:
-        #             print("Error running one of the services")
-        #             #parser.print_help()
-        # else:
-        #     parser.print_help()
-        #     msg = "\nServices and the number of instances should be passed\n"
-        #     print(msg)
     else:
         parser.print_help()
 
