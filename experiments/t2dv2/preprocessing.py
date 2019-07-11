@@ -61,7 +61,6 @@ def json_to_csv(fname, overwrite=False):
     logger.debug("generate csv %s" % csv_dest)
 
 
-
 def export_files_to_csv():
     if not os.path.exists(DEST_DIR):
         os.mkdir(DEST_DIR)
@@ -70,7 +69,7 @@ def export_files_to_csv():
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in reader:
             json_fname = row[0].strip()[:-6]+"json"
-            json_to_csv(json_fname, overwrite=True)
+            json_to_csv(json_fname, overwrite=False)
 
 
 if __name__ == "__main__":
