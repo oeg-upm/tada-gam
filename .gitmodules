@@ -11,3 +11,7 @@
 [submodule "spot/ssspotter"]
 	path = spot/ssspotter
 	url = https://github.com/oeg-upm/ssspotter.git
+
+[submodule "spot/elect"]
+	path = spot/elect
+	url = git@github.com:oeg-upm/subject_column_election.git

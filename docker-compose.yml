@@ -9,3 +9,6 @@ services:
   ssspotter:
     image: tada:ssspot
     build: ./spot/ssspotter
+  elect:
+    image: tada:elect
+    build: ./spot/elect
