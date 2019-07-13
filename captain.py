@@ -7,7 +7,10 @@ import pandas as pd
 import io
 import logging
 
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('captain')
+
 
 # This is the default network created by docker
 NETWORK = "tada-gam_default"
@@ -26,7 +29,7 @@ def get_network_ip():
 
 def get_ports(service):
     a = subprocess.check_output(["docker-compose", "ps", service])
-    logger.debug(a)
+    logger.info(a)
     combine_processes = a.split('\n')[2:]
     ports = []
     for line in combine_processes:
@@ -65,7 +68,7 @@ def label_column(file_dir, col, port, slice_size, score_ports):
     :param score_ports: a list of score ports
     :return:
     """
-    logger.debug("\n\ncombine> file: %s, col: %d, port: %s" % (file_dir, col, port))
+    logger.info("\n\ncombine> file: %s, col: %d, port: %s" % (file_dir, col, port))
     COMBINE_HOST = "http://"+get_network_ip()
     num_ports = len(score_ports)
     i = random.randint(0, num_ports-1)
@@ -78,7 +81,7 @@ def label_column(file_dir, col, port, slice_size, score_ports):
     score_port_idx = random.randint(0, num_ports-1)
     for slice_idx in range(total_num_slices):
         score_port = score_ports[(score_port_idx+slice_idx)%num_ports]
-        logger.debug("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col, slice_idx,
+        logger.info("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col, slice_idx,
                                                                                          score_port, port))
         slice_from = slice_idx*slice_size
         slice_to = min(slice_from + slice_size, dfcol.shape[0]-1)  # to cover the cases where the last slice is not full
@@ -187,13 +190,13 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, technique
     :param technique:
     :return:
     """
-    logger.debug("\n\nspot> file: %s, elector port: %s" % (file_dir, str(elector_port)))
+    logger.info("\n\nspot> file: %s, elector port: %s" % (file_dir, str(elector_port)))
     elect_host = "http://"+get_network_ip()
     num_ports = len(spotters_ports)
     i = random.randint(0, num_ports-1)
     df = pd.read_csv(file_dir)
     fname = file_dir.split(os.sep)[-1]
-    if fname[:-4].lower()==".csv":
+    if fname[-4:].lower() == ".csv":
         fname = fname[:-4] + ".tsv"
     else:
         fname = fname + ".tsv"
@@ -201,14 +204,20 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, technique
     total_num_slices = df.shape[0]/slice_size
     if df.shape[0]%slice_size != 0:
         total_num_slices += 1
+    print("shape: %d" % df.shape[0])
+    print("slice size: %d" % slice_size)
+    print("dev: %d" % (df.shape[0]/slice_size))
+    print("rem: %d" % (df.shape[0]%slice_size))
     port_idx = random.randint(0, num_ports-1)
     for slice_idx in range(total_num_slices):
         port = spotters_ports[(port_idx+slice_idx)%num_ports]
-        logger.debug("spot> file: %s, slice: %d, spot port: %s, elect port: %s" % (file_dir, slice_idx,
+        logger.info("spot> file: %s, slice: %d, spot port: %s, elect port: %s" % (file_dir, slice_idx,
                                                                                          port, elector_port))
         slice_from = slice_idx*slice_size
-        slice_to = min(slice_from + slice_size, df.shape[0]-1)  # to cover the cases where the last slice is not full
+        slice_to = min(slice_from + slice_size, df.shape[0])  # to cover the cases where the last slice is not full
         rows = []
+        print("slice from: %d" % slice_from)
+        print("slice to: %d" % slice_to)
         for row_items in df[slice_from:slice_to].values.tolist():
             # print(type(row_items))
             # print(row_items)
@@ -218,6 +227,9 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, technique
             row_items_s = [str(s) for s in row_items]
             row = "\t".join(row_items_s)
             rows.append(row)
+        if rows == []:
+            print("\n\n\n ZEEROOOO")
+            return
         file_content = "\n".join(rows)
         files = {'table': (fname, file_content)}
         values = {'technique': technique, 'slice': slice_idx, 'total': total_num_slices,
