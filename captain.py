@@ -42,6 +42,8 @@ def get_ports(service):
 
 def get_port(line):
     tokens = filter(None, line.split(' '))
+    print("tokens: ")
+    print(tokens)
     status = tokens[-2]
     if status.strip() == "Up":
         port = tokens[-1].split('->')[0].split(':')[1]
@@ -181,13 +183,14 @@ def label_files(files, slice_size):
             i = i % num_ports
 
 
-def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, technique):
+def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_technique, spot_technique):
     """
     :param file_dir:
     :param slice_size:
     :param spotters_ports:
     :param elector_port:
-    :param technique:
+    :param spot_technique:
+    :param elect_technique:
     :return:
     """
     logger.info("\n\nspot> file: %s, elector port: %s" % (file_dir, str(elector_port)))
@@ -232,8 +235,8 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, technique
             return
         file_content = "\n".join(rows)
         files = {'table': (fname, file_content)}
-        values = {'technique': technique, 'slice': slice_idx, 'total': total_num_slices,
-                  'callback': elect_host+":"+str(elector_port)+"/add"}
+        values = {'technique': spot_technique, 'slice': slice_idx, 'total': total_num_slices,
+                  'callback': elect_host+":"+str(elector_port)+"/add?technique="+elect_technique}
         spotter_url = "http://127.0.0.1:"+str(port)+"/spot"
         r = requests.post(spotter_url, files=files, data=values)
         if r.status_code != 200:
@@ -242,22 +245,19 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, technique
         i = i % num_ports
 
 
-def spot_in_files(files, slice_size, spotter):
+def spot_in_files(files, slice_size, spotter, elect_technique, spot_technique):
     """
     :param files: list of files
     :param slice_size: the size of each slice (rows and cols)
     :param spotter:
     :return:
     """
-    T_LEFT_MOST = "left_most"
-    T_NON_NUM = "left_most_non-numeric"
-    technique = T_NON_NUM
     spotters_ports = get_ports(spotter)
     elector_ports = get_ports("elect")
     i = random.randint(0, len(elector_ports)-1)
     for f in files:
         spot_in_a_file(file_dir=f, slice_size=slice_size, spotters_ports=spotters_ports, elector_port=elector_ports[i],
-                       technique=technique)
+                       elect_technique=elect_technique, spot_technique=spot_technique)
         i = i+1
         i = i % len(elector_ports)
 
@@ -272,6 +272,7 @@ def parse_args(args=None):
     # parser.add_argument('--instances', nargs='+', help="The numbers of instances (as a list)")
     parser.add_argument('--services', nargs='+', help="The names of the services")
     # parser.add_argument('--dir', help="The directory of the input files to be labeled")
+    parser.add_argument('--params', help="Extra parameters. It should be a string of key value pairs separated by ','")
     if args is None:
         args = parser.parse_args()
     else:
@@ -288,9 +289,31 @@ def parse_args(args=None):
         else:
             parser.print_help()
     elif action == "spot":
+        SPOT_TECHNIQUES = ["left_most", "left_most_non-numeric"]
+        ELECT_TECHNIQUES = ["majority", "found-majority"]
         if args.files:
             spotter = "ssspotter"
-            spot_in_files(files=args.files, slice_size=args.slicesize, spotter=spotter)
+            elect_technique = ""
+            spot_technique = ""
+            if args.params:
+                for p in args.params.split(","):
+                    k, v = p.split("=")
+                    if k == "elect_technique":
+                        elect_technique = v
+                    elif k == "spot_technique":
+                        spot_technique = v
+            if elect_technique=="":
+                logger.error("missing elect_technique in params")
+            if spot_technique=="":
+                logger.error("missing spot_technique in params")
+            if elect_technique not in ELECT_TECHNIQUES:
+                logger.error("elect_technique should have one of these values: %s" % (str(ELECT_TECHNIQUES)))
+                return
+            if spot_technique not in SPOT_TECHNIQUES:
+                logger.error("spot_technique should have one of these values: %s" % (str(SPOT_TECHNIQUES)))
+                return
+            spot_in_files(files=args.files, slice_size=args.slicesize, spotter=spotter,
+                          elect_technique=elect_technique, spot_technique=spot_technique)
         else:
             parser.print_help()
     elif action == "up":
