@@ -3,6 +3,7 @@ import commons
 import os
 import logging
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,8 @@ def download_taipian_repo():
     comm = "unzip develop.zip"
     call(comm, shell=True)
     comm = "rm develop.zip"
+    call(comm, shell=True)
+    comm = "mv TAIPAN-develop data/TAIPAN-develop"
     call(comm, shell=True)
 
 
