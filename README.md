@@ -6,6 +6,7 @@
 
 A scalable version of tada entity using the MapReduce framework
 
+
 # Usage
 To use this tool, we need to talk with the `captain.py`. It manages the 
 other resources and assign tasks and data. Although it can be done
@@ -53,6 +54,8 @@ optional arguments:
 * `docker`
 * `docker-compose`
 * `python 2.7`
+* `wget` (only needed for the TAIPIAN experiments)
+
 
 # To update submodules
 ```
@@ -62,6 +65,14 @@ git submodule foreach git pull origin master
 
 
 # To run the experiments
-## T2Dv2
+## Subject Column Detection
+### T2Dv2
 1. Download the data from the official [website](http://webdatacommons.org/webtables/goldstandard.html)
 2. Locate the downloaded data into `experiments/t2dv2/data`
+
+**TO BE CONTINUE**
+
+### T2D-TAIPAN 
+The T2D set used in the TAIPAN 
+1. `cd experiments/taipan`
+2. `python preprocessing.py` (you must have `wget` installed).
