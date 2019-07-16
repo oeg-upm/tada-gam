@@ -1,6 +1,6 @@
 *.log
-score*
-combine*
+score/*
+combine/*
 local*
 .idea*
 *.db

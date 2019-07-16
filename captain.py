@@ -283,11 +283,14 @@ def parse_args(args=None):
         ports_score = get_ports(service="score")
         print("combine: "+str(ports_combine))
         print("score: "+str(ports_score))
+        return True
     elif action == "label":
         if args.files:
             label_files(files=args.files, slice_size=args.slicesize)
+            return True
         else:
             parser.print_help()
+            return False
     elif action == "spot":
         SPOT_TECHNIQUES = ["left_most", "left_most_non-numeric"]
         ELECT_TECHNIQUES = ["majority", "found-majority"]
@@ -308,28 +311,34 @@ def parse_args(args=None):
                 logger.error("missing spot_technique in params")
             if elect_technique not in ELECT_TECHNIQUES:
                 logger.error("elect_technique should have one of these values: %s" % (str(ELECT_TECHNIQUES)))
-                return
+                return False
             if spot_technique not in SPOT_TECHNIQUES:
                 logger.error("spot_technique should have one of these values: %s" % (str(SPOT_TECHNIQUES)))
-                return
+                return False
             spot_in_files(files=args.files, slice_size=args.slicesize, spotter=spotter,
                           elect_technique=elect_technique, spot_technique=spot_technique)
+            return True
         else:
             parser.print_help()
+            return False
     elif action == "up":
         if args.services:
             if up_services(args.services):
-                pass
+                return True
             else:
                 logger.error("Error running one of the services")
+                return False
         else:
             parser.print_help()
             msg = "\nServices of instances should be passed in the form of SERVICE=#instance1 SERVICE=#instances2\n"
             logger.error(msg)
+            return False
     elif action == "status":
         combine_status()
+        return True
     else:
         parser.print_help()
+        return False
 
 
 if __name__ == '__main__':
