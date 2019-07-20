@@ -27,6 +27,19 @@ def get_network_ip():
     return ip
 
 
+def get_all_ports():
+    a = subprocess.check_output(["docker-compose", "ps"])
+    logger.info(a)
+    processes = a.split('\n')[2:]
+    ports = []
+    for line in processes:
+        if line.strip() != "":
+            port = get_port(line)
+            if port is not None:
+                ports.append(int(port))
+    return ports
+
+
 def get_ports(service):
     a = subprocess.check_output(["docker-compose", "ps", service])
     logger.info(a)
@@ -75,7 +88,8 @@ def label_column(file_dir, col, port, slice_size, score_ports):
     num_ports = len(score_ports)
     i = random.randint(0, num_ports-1)
     df = pd.read_csv(file_dir)
-    dfcol = df.iloc[:, 0]
+    dfcol = df.iloc[:, col]
+    # dfcol = df.iloc[:, 0]
     fname = file_dir.split(os.sep)[-1]
     total_num_slices = dfcol.shape[0]/slice_size
     if dfcol.shape[0]%slice_size != 0:
@@ -87,7 +101,9 @@ def label_column(file_dir, col, port, slice_size, score_ports):
                                                                                          score_port, port))
         slice_from = slice_idx*slice_size
         slice_to = min(slice_from + slice_size, dfcol.shape[0]-1)  # to cover the cases where the last slice is not full
-        files = {'file_slice': (fname, "\t".join(dfcol[slice_from:slice_to].values.tolist()))}
+        # print("fname: <%s> slicefrom: %d, to: %d\n" % (fname, slice_from, slice_to)),
+        # print(dfcol)
+        files = {'file_slice': (fname, "\t".join(dfcol[slice_from:slice_to].astype(str).values.tolist()))}
         values = {'table': fname, 'column': col, 'slice': slice_idx, 'total': total_num_slices,
                   'addr': COMBINE_HOST+":"+str(port)}
         score_url = "http://127.0.0.1:"+str(score_port)+"/score"
@@ -98,15 +114,16 @@ def label_column(file_dir, col, port, slice_size, score_ports):
         i = i % num_ports
 
 
-def up_services(services):
+def up_services(services, keep):
     """
     :param services: list of strings
+    :param keep: whether to keep the running service or not
     :return:
     """
-
-    # Shutdown running instances
-    comm = "docker-compose down"
-    subprocess.call(comm, shell=True)
+    if not keep:
+        # Shutdown running instances
+        comm = "docker-compose down"
+        subprocess.call(comm, shell=True)
 
     # # Rebuild images
     # comm = "docker-compose build"
@@ -114,6 +131,9 @@ def up_services(services):
 
     # Running services
     port = 5100
+    occ_ports = get_all_ports()
+    if occ_ports != []:
+        port = max(occ_ports)+1
     for service_instance in services:
         if '=' in service_instance:
             service, instances = service_instance.split('=')
@@ -166,21 +186,31 @@ def run_service(service, out_port, in_port):
     return exit_code == 0
 
 
-def label_files(files, slice_size):
+def label_files(files, slice_size, cols):
     """
     :param files: the directory of the files
+    :param slice_size:
+    :params cols: the list of subject columns (ids)
     :return:
     """
     ports_combine = get_ports(service="combine")
     ports_score = get_ports(service="score")
     num_ports = len(ports_combine)
     i = random.randint(0, num_ports-1)
-    for f in files:
-        for c in detect_entity_cols(f):
-            print("label_column in file: "+f)
+
+    for idx, f in enumerate(files):
+        if cols == []:
+            entity_cols = detect_entity_cols(f)
+        else:
+            entity_cols = [cols[idx]]
+        for c in entity_cols:
+            logger.info("label_column in file (%d): %s" %(idx, f))
             label_column(file_dir=f, col=c, slice_size=slice_size, port=ports_combine[i], score_ports=ports_score)
             i = i+1
             i = i % num_ports
+        # ff = open("processed.txt", "a")
+        # ff.write(f.split(os.sep)[-1]+"\n")
+        # ff.close()
 
 
 def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_technique, spot_technique):
@@ -272,7 +302,10 @@ def parse_args(args=None):
     # parser.add_argument('--instances', nargs='+', help="The numbers of instances (as a list)")
     parser.add_argument('--services', nargs='+', help="The names of the services")
     # parser.add_argument('--dir', help="The directory of the input files to be labeled")
-    parser.add_argument('--params', help="Extra parameters. It should be a string of key value pairs separated by ','")
+    help_txt = """Extra parameters. It should be a string of key value pairs separated by ',' for subject column 
+    detection and a list of subject column ids for the semantic labeling case.
+    """
+    parser.add_argument('--params', help=help_txt)
     if args is None:
         args = parser.parse_args()
     else:
@@ -286,7 +319,18 @@ def parse_args(args=None):
         return True
     elif action == "label":
         if args.files:
-            label_files(files=args.files, slice_size=args.slicesize)
+            cols = []
+            if args.params:
+                try:
+                    cols = [int(c) for c in args.params.split(",")]
+                    if len(cols) != len(args.files):
+                        logger.error("Number of subject column ids should match the number of files")
+                        return False
+                except Exception as e:
+                    logger.error("params for label should be a comma-separated list of natural numbers (col ids)")
+                    logger.error(str(e))
+                    return False
+            label_files(files=args.files, slice_size=args.slicesize, cols=cols)
             return True
         else:
             parser.print_help()
@@ -323,7 +367,19 @@ def parse_args(args=None):
             return False
     elif action == "up":
         if args.services:
-            if up_services(args.services):
+            keep = False
+            if args.params:
+                if len(args.params.split('=')) == 2:
+                    ke, va = args.params.split('=')
+                    if ke == "keep":
+                        keep = va.lower() == "true"
+                    else:
+                        logger.error("Invalid params. Expecting keep=<true or false>")
+                        return False
+                else:
+                    logger.error("Invalid params. Expecting keep=<true or false>")
+                    return False
+            if up_services(services=args.services, keep=keep):
                 return True
             else:
                 logger.error("Error running one of the services")

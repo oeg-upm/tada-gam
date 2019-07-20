@@ -1,3 +1,7 @@
+experiments/t2dv2/*.txt
+experiments/t2dv2/*.csv
+experiments/t2dv2/*.tsv
+
 *.log
 score/*
 combine/*

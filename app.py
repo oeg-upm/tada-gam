@@ -4,6 +4,8 @@ from flask import Flask, g, request, jsonify, render_template, abort
 import requests
 import captain
 import json
+import random
+import string
 import shutil
 from combine.graph.type_graph import TypeGraph
 
@@ -12,7 +14,15 @@ LOG_LVL = logging.INFO
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-UPLOAD_DIR = 'local_uploads'
+upload_fname = 'local_uploads'
+parent_path = os.sep.join(os.path.realpath(__file__).split(os.sep)[:-1])
+UPLOAD_DIR = os.path.join(parent_path, upload_fname)
+#UPLOAD_DIR = 'local_uploads'
+
+
+def get_random(size=4):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(size))
 
 
 @app.route('/')
@@ -68,6 +78,7 @@ def get_label():
         return render_template('labels.html', labels=labels, network='network', highlights=labels[:3],
                                nodes=get_nodes(g), fsid=fsid, edges=g.get_edges(), results=labels,
                                port=port, apple_id=apple_id, m=m, alpha=alpha)
+    logger.error("No graph")
     abort(500)
 
 
@@ -90,7 +101,8 @@ def get_graph(port, apple_id):
     # result = request.get(url)
     print("get graph from url: "+url)
     r = requests.get(url, stream=True)
-    dest_path = os.path.join(UPLOAD_DIR, str(apple_id)+"_graph.json")
+    dest_path = os.path.join(UPLOAD_DIR, str(apple_id)+"__"+get_random(12)+"_graph.json")
+    # dest_path = os.path.join(UPLOAD_DIR, str(apple_id)+"_graph.json")
     if r.status_code == 200:
         with open(dest_path, 'wb') as f:
             r.raw.decode_content = True
