@@ -139,4 +139,5 @@ def get_tables_and_subject_columns():
     return tables_d
 
 
-monitor_spotter()
+if __name__ == "__main__":
+    monitor_spotter()
