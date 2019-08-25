@@ -3,3 +3,4 @@ omit =
     graph/*
     .venv/*
     experiments/*
+    debug_tools.py

@@ -54,7 +54,6 @@ optional arguments:
 * `docker`
 * `docker-compose`
 * `python 2.7`
-* `wget` (only needed for the TAIPIAN experiments)
 
 
 # To update submodules
@@ -64,15 +63,26 @@ git submodule foreach git pull origin master
 [source](https://stackoverflow.com/questions/5828324/update-git-submodule-to-latest-commit-on-origin)
 
 
+
 # To run the experiments
 ## Subject Column Detection
 ### T2Dv2
 1. Download the data from the official [website](http://webdatacommons.org/webtables/goldstandard.html)
 2. Locate the downloaded data into `experiments/t2dv2/data`
+3. Go to the experiment directory `cd experiments/t2dv2`
+4. Run the labeling task `python label_experiment.py start` (note that this will 
+use docker-compose and will startup the instances, automatically)
+5. In another window, run this command `python label_experiment.py collect`. This 
+will collect the data from the instances, so in case the experiment has been interrupted or
+stopped, it will resume (to resume, start from step 4).
+6. Once the experiment is done, you can compute the results `python label_experiment.py results` (it will fetch them from the combine instances) 
+7. Show the scores `python label_experiment.py show` (precision, recall, and F1)
 
+<!--
 **TO BE CONTINUE**
 
 ### T2D-TAIPAN 
 The T2D set used in the TAIPAN 
 1. `cd experiments/taipan`
 2. `python preprocessing.py` (you must have `wget` installed).
+-->

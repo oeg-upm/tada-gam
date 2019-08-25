@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<table>
+    <tr>
+        <td>Score server</td>
+        <td>To label</td>
+        <td>Bite</td>
+    </tr>
+    {% for pair in pairs %}
+    <tr>
+        <td>{{pair.url}}</td>
+        <td><a href="/get_label?m={{pair.bite.m}}&port={{pair.port}}&id={{pair.bite.id}}">click</a></td>
+        <td>{{pair.bite}}</td>
+    </tr>
+    {%endfor%}
+</table>
+{% endblock %}

@@ -153,7 +153,7 @@ def run_labeling():
         logger.info("currently processed: %d, in progress: %d, vacant_processing_units: %d" % (num_processed, num_inprog, vacant_processing_units))
         if vacant_processing_units > 0:
             logger.info("Available vacant: vacant_processing_units: %d\n\n\n\n" % num_processed)
-            a = raw_input("Enter any key to continue: ")
+            #a = raw_input("Enter any key to continue: ")
             to_be_processed = files[:vacant_processing_units]
             col_to_be_proc = cols[:vacant_processing_units]
             remaining = files[vacant_processing_units:]

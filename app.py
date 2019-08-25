@@ -27,7 +27,7 @@ def get_random(size=4):
 
 @app.route('/')
 def hello_world():
-    return 'Hello World! This is the Captain!'
+    return 'Hello World! This is the Captain! <br> <a href="/list">List Combine servers</a>'
 
 
 @app.route('/list')
@@ -47,6 +47,8 @@ def show_combine_list():
         # apples += response.json()["apples"]
     print("pairs: ")
     print(pairs)
+    if len(pairs) == 0:
+        return "No processed files in any combine instance"
     return render_template('list_apples.html', pairs=pairs)
 
 

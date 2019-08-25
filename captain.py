@@ -6,6 +6,7 @@ import requests
 import pandas as pd
 import io
 import logging
+from time import sleep
 
 
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +15,7 @@ logger = logging.getLogger('captain')
 
 # This is the default network created by docker
 NETWORK = "tada-gam_default"
+SLEEP_TIME = 60  # seconds
 
 
 def get_network_ip():
@@ -55,8 +57,8 @@ def get_ports(service):
 
 def get_port(line):
     tokens = filter(None, line.split(' '))
-    print("tokens: ")
-    print(tokens)
+    # print("tokens: ")
+    # print(tokens)
     status = tokens[-2]
     if status.strip() == "Up":
         port = tokens[-1].split('->')[0].split(':')[1]
@@ -86,7 +88,7 @@ def label_column(file_dir, col, port, slice_size, score_ports):
     logger.info("\n\ncombine> file: %s, col: %d, port: %s" % (file_dir, col, port))
     COMBINE_HOST = "http://"+get_network_ip()
     num_ports = len(score_ports)
-    i = random.randint(0, num_ports-1)
+    # i = random.randint(0, num_ports-1)
     df = pd.read_csv(file_dir)
     dfcol = df.iloc[:, col]
     # dfcol = df.iloc[:, 0]
@@ -96,22 +98,89 @@ def label_column(file_dir, col, port, slice_size, score_ports):
         total_num_slices += 1
     score_port_idx = random.randint(0, num_ports-1)
     for slice_idx in range(total_num_slices):
-        score_port = score_ports[(score_port_idx+slice_idx)%num_ports]
-        logger.info("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col, slice_idx,
-                                                                                         score_port, port))
-        slice_from = slice_idx*slice_size
-        slice_to = min(slice_from + slice_size, dfcol.shape[0]-1)  # to cover the cases where the last slice is not full
-        # print("fname: <%s> slicefrom: %d, to: %d\n" % (fname, slice_from, slice_to)),
-        # print(dfcol)
-        files = {'file_slice': (fname, "\t".join(dfcol[slice_from:slice_to].astype(str).values.tolist()))}
-        values = {'table': fname, 'column': col, 'slice': slice_idx, 'total': total_num_slices,
-                  'addr': COMBINE_HOST+":"+str(port)}
-        score_url = "http://127.0.0.1:"+str(score_port)+"/score"
-        r = requests.post(score_url, files=files, data=values)
-        if r.status_code != 200:
-            print("error: "+str(r.content))
-        i = i + 1
-        i = i % num_ports
+        label_a_slice(slice_idx=slice_idx, total_num_slices=total_num_slices, score_ports=score_ports,
+                      file_dir=file_dir, col=col, combine_port=port, combine_host=COMBINE_HOST,
+                      slice_size=slice_size, fname=fname, dfcol=dfcol)
+
+        # score_port = score_ports[(score_port_idx+slice_idx)%num_ports]
+        # logger.info("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col, slice_idx,
+        #                                                                                  score_port, port))
+        # slice_from = slice_idx*slice_size
+        # slice_to = min(slice_from + slice_size, dfcol.shape[0]-1)  # to cover the cases where the last slice is not full
+        # # print("fname: <%s> slicefrom: %d, to: %d\n" % (fname, slice_from, slice_to)),
+        # # print(dfcol)
+        # files = {'file_slice': (fname, "\t".join(dfcol[slice_from:slice_to].astype(str).values.tolist()))}
+        # values = {'table': fname, 'column': col, 'slice': slice_idx, 'total': total_num_slices,
+        #           'addr': COMBINE_HOST+":"+str(port)}
+        # score_url = "http://127.0.0.1:"+str(score_port)+"/score"
+        # r = requests.post(score_url, files=files, data=values)
+        # if r.status_code != 200:
+        #     logger.error("error: "+str(r.content))
+        # # i = i + 1
+        # # i = i % num_ports
+
+
+def label_a_slice(slice_idx, total_num_slices, score_ports, file_dir, col, combine_port, combine_host,
+                  slice_size, fname, dfcol):
+    """
+    :param slice_idx: The index of a slice
+    :param total_num_slices:  The total number of slices
+    :param score_ports: the list of score ports
+    :param file_dir: the directory of the file (passed here just for logging)
+    :param col: the index of the column
+    :param combine_port: the target combine port
+    :param combine_host: the http url of the combine (without the port)
+    :param slice_size: the size of the slize
+    :param fname: the name of the file (it will be used as an identifier for validating the labeing and combining slices)
+    :param dfcol: the dataframe of the column (the whole one)
+    :return:
+    """
+
+    num_ports = len(score_ports)
+    score_port_idx_start = random.randint(0, num_ports - 1)
+    while True:
+        for i in range(num_ports):
+            score_port_idx = (score_port_idx_start + i) % num_ports
+
+            score_port = score_ports[score_port_idx]
+            num_complete, num_inprog = get_score_load(score_port)
+            if num_inprog == 0:  # the score is not working on something else
+
+                logger.info("score> file: %s, col: %d, slice: %d, score_port: %s, combine_port: %s" % (file_dir, col,
+                                                                                                       slice_idx,
+                                                                                                       score_port,
+                                                                                                       combine_port))
+                slice_from = slice_idx * slice_size
+                slice_to = min(slice_from + slice_size,
+                               dfcol.shape[0] - 1)  # to cover the cases where the last slice is not full
+                files = {'file_slice': (fname, "\t".join(dfcol[slice_from:slice_to].astype(str).values.tolist()))}
+                values = {'table': fname, 'column': col, 'slice': slice_idx, 'total': total_num_slices,
+                          'addr': combine_host + ":" + str(combine_port)}
+                score_url = "http://127.0.0.1:" + str(score_port) + "/score"
+                r = requests.post(score_url, files=files, data=values)
+                if r.status_code != 200:
+                    logger.error("error: " + str(r.content))
+                return
+        sleep(SLEEP_TIME)
+
+
+def get_score_load(score_port):
+    """
+    Get the number of inprogress and completed runs
+    :param score_port: str or num
+    :return: int, int
+    """
+    score_url = "http://127.0.0.1:" + str(score_port) + "/list"
+    response = requests.get(score_url)
+    j = response.json()
+    complete = 0
+    inprogress = 0
+    for b in j["bites"]:
+        if b["status"] == "complete":
+            complete += 1
+        else:
+            inprogress += 1
+    return complete, inprogress
 
 
 def up_services(services, keep):
@@ -330,6 +399,7 @@ def parse_args(args=None):
                     logger.error("params for label should be a comma-separated list of natural numbers (col ids)")
                     logger.error(str(e))
                     return False
+            logger.info("columns ids: %s" % str(cols))
             label_files(files=args.files, slice_size=args.slicesize, cols=cols)
             return True
         else:
