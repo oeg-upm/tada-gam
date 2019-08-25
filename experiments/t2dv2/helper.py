@@ -6,12 +6,19 @@ from label_experiment import UPLOAD_DIR
 
 
 def extract_subject_column(fdir, column_idx):
+    """
+    Extract subject column data and write them in a sample file (used only for debugging)
+    :param fdir:
+    :param column_idx:
+    :return:
+    """
     df = pd.read_csv(fdir, header=None)
     s = df[column_idx]
     content = "\t".join([str(ss) for ss in s if ss is not np.nan])
-    f = open("generated_sample.tsv","w")
+    f = open("generated_sample.tsv", "w")
     f.write(content)
     f.close()
+
 
 if __name__ == '__main__':
     fname = sys.argv[1]
