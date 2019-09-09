@@ -76,13 +76,14 @@ def detect_entity_cols(file):
     return [0]
 
 
-def label_column(file_dir, col, port, slice_size, score_ports):
+def label_column(file_dir, col, port, slice_size, score_ports, sample):
     """
     :param file_dir: the directory of the input file
     :param col: col index
     :param slice_size: integer of the slice size
     :param port: port
     :param score_ports: a list of score ports
+    :param sample: the sample method
     :return:
     """
     logger.info("\n\ncombine> file: %s, col: %d, port: %s" % (file_dir, col, port))
@@ -93,10 +94,16 @@ def label_column(file_dir, col, port, slice_size, score_ports):
     dfcol = df.iloc[:, col]
     # dfcol = df.iloc[:, 0]
     fname = file_dir.split(os.sep)[-1]
-    total_num_slices = dfcol.shape[0]/slice_size
-    if dfcol.shape[0]%slice_size != 0:
-        total_num_slices += 1
-    score_port_idx = random.randint(0, num_ports-1)
+
+    if sample == "10":
+        total_num_slices = 1
+        slice_size = min(10, dfcol.shape[0])
+    else:
+        total_num_slices = dfcol.shape[0]/slice_size
+        if dfcol.shape[0]%slice_size != 0:
+            total_num_slices += 1
+
+    # score_port_idx = random.randint(0, num_ports-1)
     for slice_idx in range(total_num_slices):
         label_a_slice(slice_idx=slice_idx, total_num_slices=total_num_slices, score_ports=score_ports,
                       file_dir=file_dir, col=col, combine_port=port, combine_host=COMBINE_HOST,
@@ -255,11 +262,12 @@ def run_service(service, out_port, in_port):
     return exit_code == 0
 
 
-def label_files(files, slice_size, cols):
+def label_files(files, slice_size, cols, sample):
     """
     :param files: the directory of the files
     :param slice_size:
-    :params cols: the list of subject columns (ids)
+    :param cols: the list of subject columns (ids)
+    :param sample: the sample method
     :return:
     """
     ports_combine = get_ports(service="combine")
@@ -274,7 +282,8 @@ def label_files(files, slice_size, cols):
             entity_cols = [cols[idx]]
         for c in entity_cols:
             logger.info("label_column in file (%d): %s" %(idx, f))
-            label_column(file_dir=f, col=c, slice_size=slice_size, port=ports_combine[i], score_ports=ports_score)
+            label_column(file_dir=f, col=c, slice_size=slice_size, port=ports_combine[i], score_ports=ports_score,
+                         sample=sample)
             i = i+1
             i = i % num_ports
         # ff = open("processed.txt", "a")
@@ -371,6 +380,8 @@ def parse_args(args=None):
     # parser.add_argument('--instances', nargs='+', help="The numbers of instances (as a list)")
     parser.add_argument('--services', nargs='+', help="The names of the services")
     # parser.add_argument('--dir', help="The directory of the input files to be labeled")
+    parser.add_argument('--sample', help="The sampling method", choices=['all', '10'])
+    # parser.add_argument('--sample', help="The sample method for semantic labeling", default=None)
     help_txt = """Extra parameters. It should be a string of key value pairs separated by ',' for subject column 
     detection and a list of subject column ids for the semantic labeling case.
     """
@@ -400,7 +411,7 @@ def parse_args(args=None):
                     logger.error(str(e))
                     return False
             logger.info("columns ids: %s" % str(cols))
-            label_files(files=args.files, slice_size=args.slicesize, cols=cols)
+            label_files(files=args.files, slice_size=args.slicesize, cols=cols, sample=args.sample)
             return True
         else:
             parser.print_help()
