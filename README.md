@@ -6,6 +6,21 @@
 
 A scalable version of tada entity using the MapReduce framework
 
+# Install (Mac and Ubuntu)
+1. Download the application via `git` or the web interface of github
+1. using the terminal, go to project directory `cd /home/ubuntu/tada-gam` (if `/home/ubuntu/` was your download location)
+1. Create virtual environment`virtualenv -p /usr/bin/python2.7 .venv` (you need to have virtualenv installed)
+1. Activate the virtual environment `source .venv/bin/activate`
+1. Install dependencies via pip `pip install -r requirements.txt ` 
+
+# Download T2Dv2 experimental data via command line 
+*This follows the install step* it is only needed if you want to run the experiments 
+1. Go to the experiment url using the terminal `cd experiments/t2dv2/data`
+1. Download T2Dv2 data via wget `wget http://webdatacommons.org/webtables/extended_instance_goldstandard.tar.gz`
+1. Extract the downloaded file `tar -xvzf extended_instance_goldstandard.tar.gz`
+1. Delete the archive (optional) `rm extended_instance_goldstandard.tar.gz`
+1. Overwrite the gold standard with the fixed one`cp ../classes_GS.fixed classes_GS.csv`
+
 
 # Usage
 To use this tool, we need to talk with the `captain.py`. It manages the 
