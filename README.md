@@ -88,18 +88,19 @@ git submodule foreach git pull origin master
 # To run the experiments
 ## Subject Column Detection
 ### T2Dv2
-1. Download the data from the official [website](http://webdatacommons.org/webtables/goldstandard.html)
-2. Locate the downloaded data into `experiments/t2dv2/data`
-3. Replace the file `experiments/t2dv2/data/classes_GS.csv` with `experiments/t2dv2/classes_GS.fixed`
+1. Download and locate the data automatically (see above) or manually like here
+    1. Download the data from the official [website](http://webdatacommons.org/webtables/goldstandard.html)
+    1. Locate the downloaded data into `experiments/t2dv2/data`
+    1. Replace the file `experiments/t2dv2/data/classes_GS.csv` with `experiments/t2dv2/classes_GS.fixed`
 and rename it to `classes_GS.csv`.
-4. Go to the experiment directory `cd experiments/t2dv2`
-5. Run the labeling task `python label_experiment.py start --sample all` (note that this will 
+1. Go to the experiment directory `cd experiments/t2dv2`
+1. Run the labeling task `python label_experiment.py start --sample all` (note that this will 
 use docker-compose and will startup the instances, automatically)
-6. In another window, run this command `python label_experiment.py collect --sample all`. This 
+1. In another window, run this command `python label_experiment.py collect --sample all`. This 
 will collect the data from the instances, so in case the experiment has been interrupted or
 stopped, it will resume (to resume, start from step 4).
-7. Once the experiment is done, you can compute the results `python label_experiment.py results --sample all` (it will fetch them from the combine instances) 
-8. Show the scores `python label_experiment.py show --sample all` (precision, recall, and F1)
+1. Once the experiment is done, you can compute the results `python label_experiment.py results --sample all` (it will fetch them from the combine instances) 
+1. Show the scores `python label_experiment.py show --sample all` (precision, recall, and F1)
 
 *note: for sample `all`, it will run normally, for sample `10`, it will take the top 10 values from each subject column only*
 
