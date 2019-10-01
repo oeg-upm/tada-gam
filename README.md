@@ -86,7 +86,7 @@ git submodule foreach git pull origin master
 
 
 # To run the experiments
-## Subject Column Detection
+## Subject Column Labeling
 ### T2Dv2
 1. Download and locate the data automatically (see above) or manually like here
     1. Download the data from the official [website](http://webdatacommons.org/webtables/goldstandard.html)
@@ -103,6 +103,9 @@ stopped, it will resume (to resume, start from step 4).
 1. Show the scores `python label_experiment.py show --sample all` (precision, recall, and F1)
 
 *note: for sample `all`, it will run normally, for sample `10`, it will take the top 10 values from each subject column only*
+
+## Subject Column Detection
+### T2Dv2
 
 <!--
 **TO BE CONTINUE**

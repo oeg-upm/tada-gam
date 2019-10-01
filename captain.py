@@ -10,7 +10,7 @@ from time import sleep
 
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('captain')
+logger = logging.getLogger(__name__)
 
 
 # This is the default network created by docker
@@ -291,7 +291,7 @@ def label_files(files, slice_size, cols, sample):
         # ff.close()
 
 
-def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_technique, spot_technique):
+def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_technique, spot_technique, sample):
     """
     :param file_dir:
     :param slice_size:
@@ -299,6 +299,7 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_tec
     :param elector_port:
     :param spot_technique:
     :param elect_technique:
+    :param sample: the sample method
     :return:
     """
     logger.info("\n\nspot> file: %s, elector port: %s" % (file_dir, str(elector_port)))
@@ -312,13 +313,18 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_tec
     else:
         fname = fname + ".tsv"
 
-    total_num_slices = df.shape[0]/slice_size
-    if df.shape[0]%slice_size != 0:
-        total_num_slices += 1
-    print("shape: %d" % df.shape[0])
-    print("slice size: %d" % slice_size)
-    print("dev: %d" % (df.shape[0]/slice_size))
-    print("rem: %d" % (df.shape[0]%slice_size))
+    if sample == "10":
+        total_num_slices = 1
+        slice_size = min(10, df.shape[0])
+    else:
+        total_num_slices = df.shape[0] / slice_size
+        if df.shape[0] % slice_size != 0:
+            total_num_slices += 1
+
+    logger.info("shape: %d" % df.shape[0])
+    logger.info("slice size: %d" % slice_size)
+    logger.info("dev: %d" % (df.shape[0]/slice_size))
+    logger.info("rem: %d" % (df.shape[0]%slice_size))
     port_idx = random.randint(0, num_ports-1)
     for slice_idx in range(total_num_slices):
         port = spotters_ports[(port_idx+slice_idx)%num_ports]
@@ -327,8 +333,8 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_tec
         slice_from = slice_idx*slice_size
         slice_to = min(slice_from + slice_size, df.shape[0])  # to cover the cases where the last slice is not full
         rows = []
-        print("slice from: %d" % slice_from)
-        print("slice to: %d" % slice_to)
+        logger.info("slice from: %d" % slice_from)
+        logger.info("slice to: %d" % slice_to)
         for row_items in df[slice_from:slice_to].values.tolist():
             # print(type(row_items))
             # print(row_items)
@@ -339,7 +345,7 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_tec
             row = "\t".join(row_items_s)
             rows.append(row)
         if rows == []:
-            print("\n\n\n ZEEROOOO")
+            logger.warning("\n\n\n ZEEROOOO")
             return
         file_content = "\n".join(rows)
         files = {'table': (fname, file_content)}
@@ -353,11 +359,14 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_tec
         i = i % num_ports
 
 
-def spot_in_files(files, slice_size, spotter, elect_technique, spot_technique):
+def spot_in_files(files, slice_size, spotter, elect_technique, spot_technique, sample):
     """
     :param files: list of files
     :param slice_size: the size of each slice (rows and cols)
     :param spotter:
+    :param elect_technique:
+    :param spot_technique:
+    :param sample: the sampling methods
     :return:
     """
     spotters_ports = get_ports(spotter)
@@ -365,12 +374,13 @@ def spot_in_files(files, slice_size, spotter, elect_technique, spot_technique):
     i = random.randint(0, len(elector_ports)-1)
     for f in files:
         spot_in_a_file(file_dir=f, slice_size=slice_size, spotters_ports=spotters_ports, elector_port=elector_ports[i],
-                       elect_technique=elect_technique, spot_technique=spot_technique)
+                       elect_technique=elect_technique, spot_technique=spot_technique, sample=sample)
         i = i+1
         i = i % len(elector_ports)
 
 
 def parse_args(args=None):
+    global logger
     parser = argparse.ArgumentParser(description='Captain to look after the processes')
     parser.add_argument('action', help='What action you like to perform', choices=['label', 'spot', 'ports', 'up',
                                                                                    'status'])
@@ -380,6 +390,7 @@ def parse_args(args=None):
     # parser.add_argument('--instances', nargs='+', help="The numbers of instances (as a list)")
     parser.add_argument('--services', nargs='+', help="The names of the services")
     # parser.add_argument('--dir', help="The directory of the input files to be labeled")
+    parser.add_argument('--log', help="The name of the log file", type=file)
     parser.add_argument('--sample', help="The sampling method", choices=['all', '10'])
     # parser.add_argument('--sample', help="The sample method for semantic labeling", default=None)
     help_txt = """Extra parameters. It should be a string of key value pairs separated by ',' for subject column 
@@ -390,6 +401,12 @@ def parse_args(args=None):
         args = parser.parse_args()
     else:
         args = parser.parse_args(args)
+
+    if args.log:
+        handler = logging.FileHandler(args.log)
+        logger.addHandler(handler)
+
+
     action = args.action
     if action == "ports":
         ports_combine = get_ports(service="combine")
@@ -417,7 +434,7 @@ def parse_args(args=None):
             parser.print_help()
             return False
     elif action == "spot":
-        SPOT_TECHNIQUES = ["left_most", "left_most_non-numeric"]
+        SPOT_TECHNIQUES = ["left_most", "left_most_non-numeric", "most_distinct"]
         ELECT_TECHNIQUES = ["majority", "found-majority"]
         if args.files:
             spotter = "ssspotter"
@@ -441,7 +458,7 @@ def parse_args(args=None):
                 logger.error("spot_technique should have one of these values: %s" % (str(SPOT_TECHNIQUES)))
                 return False
             spot_in_files(files=args.files, slice_size=args.slicesize, spotter=spotter,
-                          elect_technique=elect_technique, spot_technique=spot_technique)
+                          elect_technique=elect_technique, spot_technique=spot_technique, sample=args.sample)
             return True
         else:
             parser.print_help()
