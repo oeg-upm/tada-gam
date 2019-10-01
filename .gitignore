@@ -7,7 +7,7 @@ slice.tsv
 *.log
 score/*
 combine/*
-local*
+#local*
 .idea*
 *.db
 .DS_Store
