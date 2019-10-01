@@ -70,15 +70,21 @@ def get_scores(gold_tables, processed_tables):
 
 def all_elected(tables, elect_ports, host_url):
     processed_tables = []
+    not_complete = False
     for elect_port in elect_ports:
         url = host_url+":"+str(elect_port)+"/status"
         response = requests.get(url)
         j = response.json()
         for table in j["apples"]:
             if table["status"] != "Complete":
-                logger.info("processed until now: %d" % len(processed_tables))
-                return None
+                # logger.info("[elect:%s]processed until now: %d" % (str(elect_port), len(processed_tables)))
+                not_complete = True
+                # return None
             processed_tables.append(table)
+        logger.info("[elect:%s]processed until now: %d" % (str(elect_port), len(processed_tables)))
+
+    if not_complete:
+        return None
     if len(processed_tables) == len(tables.keys()):
         return processed_tables
     else:
@@ -149,7 +155,8 @@ def run_detection(spot_technique, elect_technique, sample):
     fdirs = []
     for t in tables_d.keys():
         tname = t[:-4] + ".csv"
-        tdir = os.path.join(UPLOAD_DIR, tname)
+        tdir = os.path.join(os.path.abspath(UPLOAD_DIR), tname)
+        # tdir = os.path.join(UPLOAD_DIR, tname)
         fdirs.append(tdir)
 
     run_services(files=fdirs, elect_technique=elect_technique, spot_technique=spot_technique, sample=sample)
@@ -194,9 +201,10 @@ def parse_args(args=None):
     actions_desc = """
         "start":      To start the services
         "detect":     To run the detection experiment
+        "monitor":    To monitor the progress
     """
     parser = argparse.ArgumentParser(description='To detect the subject column')
-    parser.add_argument('action', help=''+actions_desc, choices=['start', 'detect'])
+    parser.add_argument('action', help=''+actions_desc, choices=['start', 'detect', 'monitor'])
     parser.add_argument('--spot_technique', choices=["left_most", "left_most_non-numeric", "most_distinct"],
                         help="Enter the spot technique")
     parser.add_argument('--elect_technique', choices=["majority", "found-majority"],
@@ -215,7 +223,7 @@ def parse_args(args=None):
         formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
         handler.setFormatter(formatter)
     if args.action == "start":
-        startup(spot=1, elect=1)
+        startup(spot=6, elect=3)
     elif args.action == "detect":
         if not args.spot_technique :
             logger.error("spot_technique is required")
@@ -230,6 +238,8 @@ def parse_args(args=None):
             parser.print_help()
             return
         run_detection(elect_technique=args.elect_technique, spot_technique=args.spot_technique, sample=args.sample)
+        monitor_spotter()
+    elif args.action == "monitor":
         monitor_spotter()
     else:
         parser.print_help()

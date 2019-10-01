@@ -7,7 +7,7 @@
 A scalable version of tada entity using the MapReduce framework
 
 # Install (Mac and Ubuntu)
-1. Download the application via `git` or the web interface of github
+1. Download the application via `git` or the web interface of github (make sure to include the submodules as well e.g., `git clone --recursive https://github.com/oeg-upm/tada-gam.git`)
 1. using the terminal, go to project directory `cd /home/ubuntu/tada-gam` (if `/home/ubuntu/` was your download location)
 1. Create virtual environment`virtualenv -p /usr/bin/python2.7 .venv` (you need to have virtualenv installed)
 1. Activate the virtual environment `source .venv/bin/activate`
@@ -20,6 +20,11 @@ A scalable version of tada entity using the MapReduce framework
 1. Extract the downloaded file `tar -xvzf extended_instance_goldstandard.tar.gz`
 1. Delete the archive (optional) `rm extended_instance_goldstandard.tar.gz`
 1. Overwrite the gold standard with the fixed one`cp ../classes_GS.fixed classes_GS.csv`
+1. Generate CSV copy from the JSON
+    1. In the terminal, go to the directory of the application `cd ../../..`
+    1. Activate the virtual environment `source .venv/bin/activate`
+    1. Go to t2dv2 directory `cd experiments/t2dv2/`
+    1. Generate CSV copy `python preprocessing.py`
 
 
 # Usage
@@ -106,7 +111,9 @@ stopped, it will resume (to resume, start from step 4).
 
 ## Subject Column Detection
 ### T2Dv2
-
+1. Go to the experiment folder (from the app folder) `cd experiments/t2dv2`
+1. Run docker images `python col_detect_experiment.py start` 
+1. Run the detection experiment ``
 <!--
 **TO BE CONTINUE**
 
