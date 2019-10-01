@@ -212,6 +212,8 @@ def parse_args(args=None):
     if args.log:
         handler = logging.FileHandler(args.log)
         logger.addHandler(handler)
+        formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+        handler.setFormatter(formatter)
     if args.action == "start":
         startup(spot=1, elect=1)
     elif args.action == "detect":
