@@ -78,7 +78,7 @@ def workflow():
     scores_path = os.path.join(DATA_DIR, "scores.csv")
     f = open(scores_path, "w")
     f.close()
-    SPOT_TECHNIQUES = ["left_most", "left_most_non-numeric"]
+    SPOT_TECHNIQUES = ["left_most", "left_most_non-numeric", "most_distinct"]
     ELECT_TECHNIQUES = ["majority", "found-majority"]
     for spot_tech in SPOT_TECHNIQUES:
         for elect_tech in ELECT_TECHNIQUES:

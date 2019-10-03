@@ -71,18 +71,26 @@ def get_scores(gold_tables, processed_tables):
 def all_elected(tables, elect_ports, host_url):
     processed_tables = []
     not_complete = False
+    num_not_complete = 0
+    tables_names = [] # just for debugging
     for elect_port in elect_ports:
         url = host_url+":"+str(elect_port)+"/status"
         response = requests.get(url)
         j = response.json()
         for table in j["apples"]:
+            tables_names.append(table["apple"])
             if table["status"] != "Complete":
                 # logger.info("[elect:%s]processed until now: %d" % (str(elect_port), len(processed_tables)))
                 not_complete = True
+                num_not_complete += 1
                 # return None
-            processed_tables.append(table)
-        logger.info("[elect:%s]processed until now: %d" % (str(elect_port), len(processed_tables)))
+            else:
+                processed_tables.append(table)
 
+        logger.info("[elect:%s]processed until now: %d, not completed: %d" % (str(elect_port), len(processed_tables), num_not_complete))
+        # logger.info("[elect:%s]processed until now: %d" % (str(elect_port), len(processed_tables)))
+
+    logger.info("total number of apples: %d unique number of apples %d" % (len(tables_names), len(set(tables_names))))
     if not_complete:
         return None
     if len(processed_tables) == len(tables.keys()):
@@ -170,7 +178,7 @@ def run_services(files, elect_technique, spot_technique, sample):
     :param spot_technique: the spot technique
     :return:
     """
-    logger.info("\n\n\n\n\n\nSpot to following files: ")
+    logger.info("\n\n\n\n\n\nSpot to following files: (%d)" % len(files))
     logger.info(files)
     args = ["spot",
             "--sample", sample,

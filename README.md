@@ -98,6 +98,8 @@ git submodule foreach git pull origin master
     1. Locate the downloaded data into `experiments/t2dv2/data`
     1. Replace the file `experiments/t2dv2/data/classes_GS.csv` with `experiments/t2dv2/classes_GS.fixed`
 and rename it to `classes_GS.csv`.
+1. In the terminal, go to the directory of the application 
+1. Activate the virtual environment `source .venv/bin/activate`
 1. Go to the experiment directory `cd experiments/t2dv2`
 1. Run the labeling task `python label_experiment.py start --sample all` (note that this will 
 use docker-compose and will startup the instances, automatically)
@@ -111,14 +113,18 @@ stopped, it will resume (to resume, start from step 4).
 
 ## Subject Column Detection
 ### T2Dv2
+1. In the terminal, go to the directory of the application
+1. Activate the virtual environment `source .venv/bin/activate`
+1. Download the data (follow *Download T2Dv2 experimental data via command line* above)
 1. Go to the experiment folder (from the app folder) `cd experiments/t2dv2`
 1. Run docker images `python col_detect_experiment.py start` 
 1. Run the detection experiment ``
-<!--
-**TO BE CONTINUE**
 
 ### T2D-TAIPAN 
 The T2D set used in the TAIPAN 
-1. `cd experiments/taipan`
-2. `python preprocessing.py` (you must have `wget` installed).
--->
+1. In the terminal, go to the directory of the application
+1. Activate the virtual environment `source .venv/bin/activate`
+1. Go to Taipan experiment directory `cd experiments/taipan`
+1. Download and preprocess `python preprocessing.py` (you must have `wget` installed).
+1. Run the experiment `python experiment.py`
+

@@ -349,12 +349,13 @@ def spot_in_a_file(file_dir, slice_size, spotters_ports, elector_port, elect_tec
             return
         file_content = "\n".join(rows)
         files = {'table': (fname, file_content)}
-        values = {'technique': spot_technique, 'slice': slice_idx, 'total': total_num_slices,
+        values = {'technique': spot_technique, 'slice': slice_idx, 'total': total_num_slices,# 'sync': '1',
                   'callback': elect_host+":"+str(elector_port)+"/add?technique="+elect_technique}
         spotter_url = "http://127.0.0.1:"+str(port)+"/spot"
         r = requests.post(spotter_url, files=files, data=values)
         if r.status_code != 200:
             logger.error("error: "+str(r.content))
+            sleep(100)
         i = i + 1
         i = i % num_ports
 
