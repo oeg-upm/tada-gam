@@ -125,6 +125,6 @@ The T2D set used in the TAIPAN
 1. In the terminal, go to the directory of the application
 1. Activate the virtual environment `source .venv/bin/activate`
 1. Go to Taipan experiment directory `cd experiments/taipan`
-1. Download and preprocess `python preprocessing.py` (you must have `wget` installed).
+1. Download and preprocess `python preprocessing.py` (you must have `wget` installed)
 1. Run the experiment `python experiment.py`
-
+1. The scores will be located in `data/scores.csv`
