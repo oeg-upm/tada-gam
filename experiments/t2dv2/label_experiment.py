@@ -477,7 +477,7 @@ def parse_args(args=None):
         collection_fname = PROCESSED_DIR_SAMPLE
     else:
         logger.error("Invalid sample method")
-        raise Exception("invalud sample method")
+        raise Exception("invalid sample method")
 
     if args.action == "start":
         workflow(collection_fname, sample=args.sample)

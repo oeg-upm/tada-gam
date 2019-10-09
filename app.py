@@ -7,6 +7,7 @@ import json
 import random
 import string
 import shutil
+import time
 from combine.graph.type_graph import TypeGraph
 
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +25,89 @@ def get_random(size=4):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(size))
 
+
+@app.route('/fast', methods=['GET', 'POST'])
+def fast_labeling():
+    import pandas as pd
+    max_slice_size = 10
+    if request.method=='GET':
+        return render_template('fast_labeling.html')
+    else:
+        uploaded_file = request.files['table']
+        tname = uploaded_file.filename
+        ext = uploaded_file.filename[-4:]
+        fname = "fast_" + get_random() + ext
+        fdir = os.path.join(UPLOAD_DIR, fname)
+        uploaded_file.save(fdir)
+        # To start the services: python captain.py up --services ssspotter elect score combine
+        df = pd.read_csv(fdir)
+        total_num_slices = 1
+        slice_size = min(max_slice_size, df.shape[0])
+
+
+        rows = []
+        for row_items in df[0:slice_size].values.tolist():
+            row_items_s = [str(s) for s in row_items]
+            row = "\t".join(row_items_s)
+            rows.append(row)
+
+        file_content = "\n".join(rows)
+        files = {'table': (fname, file_content)}
+        data = {
+            'technique': 'most_distinct',
+            'callback': '',
+            'slice': 0,
+            'total': 1,
+        }
+        spotters_ports = captain.get_ports('ssspotter')
+        port = spotters_ports[0]
+        spotter_url = "http://127.0.0.1:"+str(port)+"/spot"
+        r = requests.post(spotter_url, files=files, data=data)
+        if r.status_code != 200:
+            logger.error("error: "+str(r.content))
+            return "error: "+str(r.content)
+        else:
+            col_id = r.json()['subject_col_id']
+            captain.label_files(files=[fdir], slice_size=max_slice_size, cols=[col_id], sample=str(max_slice_size))
+            ports_combine = captain.get_ports(service="combine")
+            pairs = []
+            while pairs == []:
+                time.sleep(1)
+                for p in ports_combine:
+                    url = "http://127.0.0.1:" + p + "/list"
+                    print("url: " + url)
+                    response = requests.get(url)
+                    print(response.json())
+                    apples = response.json()["apples"]
+                    for apple in apples:
+                        if apple['table'] == fname:
+                            pairs.append({'url': url, 'apple': apple, 'port': p})
+                        # pairs.append((url, apple))
+                    # combines[url] = response.json()["apples"]
+                    # apples += response.json()["apples"]
+                print("pairs: ")
+                print(pairs)
+            if len(pairs) == 0:
+                return "No processed files in any combine instance"
+            else:
+
+#################
+                apple_id = pairs[0]['apple']['id']
+                port = pairs[0]['port']
+                m = pairs[0]['apple']['m']
+                graph_dir = get_graph(port=str(port), apple_id=str(apple_id))
+                if graph_dir:
+                    print("graph_dir is found: " + str(graph_dir))
+                    alpha = 0.01
+                    fsid = 3
+                    print("graph_dir before get labels: " + graph_dir)
+                    g, labels = get_labels_from_graph(graph_dir=graph_dir, m=m, alpha=alpha, fsid=fsid)
+
+                    return render_template('fast_labeling.html', concept=labels[0], col_id=col_id)
+
+#################
+
+        return 'Action'
 
 @app.route('/')
 def hello_world():
